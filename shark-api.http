@@ -17,6 +17,27 @@ Content-Type: application/json
 }
 
 ###
+POST {{baseUrl}}create-arena
+ContentType: application/json
+
+{
+    "arenaType": "private",
+    "countdownToStart": 10,
+    "gameLength": 15000,
+    "players": [ { "sharkName": "iiil;qr" } ]
+}
+
+### 
+POST {{baseUrl}}create-arena
+content-type: application/json 
+
+{ 
+    "arenaType": "private",
+    "countdownToStart": 1,
+    "gameLength": 15000,
+    "players": [ { "sharkName": "" } ] }
+
+###
 POST {{baseUrl}}create-public-player/0000-0048
 Content-Type: application/json
 
