@@ -1,0 +1,25 @@
+@baseUrl = http://192.168.130.142:3000/
+
+###
+GET {{baseUrl}}public-arenas
+
+###
+GET {{baseUrl}}arena-settings/0000-0048
+
+###
+POST {{baseUrl}}create-arena
+Content-Type: application/json
+
+{
+    "arenaType": "public",
+    "countdownToStart": 10,
+    "gameLength": 720
+}
+
+###
+POST {{baseUrl}}create-public-player/0000-0048
+Content-Type: application/json
+
+{
+    "sharkName": "hi world"
+}

@@ -1,0 +1,17 @@
+{
+  "name": "sharkswithlasers",
+  "version": "1.0.0",
+  "description": "Team iiilql;r",
+  "main": "test-socket-io.js",
+  "scripts": {
+    "start": "node test-socket-io.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Team iiilql;r",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket-io": "^1.0.0",
+    "socket.io-client": "^4.5.4"
+  }
+}
