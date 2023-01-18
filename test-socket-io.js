@@ -9,8 +9,8 @@ const logResult = console.log;
 
 const socket = io(baseSocket);
 
-const arenaId = "0000-007J";
-const playerId = "c1b678ff-3641-495a-9140-526be8e93059";
+const arenaId = "0000-ATP2";
+const playerId = "0fb3d073-6f47-4d60-b404-2daa111d6f1e";
 
 const randomInterval = (max, min) => () =>
   Math.floor(Math.random() * (max - min + 1) + min);
@@ -31,23 +31,86 @@ socket.on("disconnect", () => {
   console.log("we have disconnected");
 });
 
-socket.on("beatUpdate", (stuff) => {
+// Assumption of screen size at 800 width by 600 height
+const window = {
+  width: 800,
+  height: 600,
+};
+const tryMove = (socket) => (beatUpdate) => {
+  const isCloseToEdge = (centerpoint) => {
+    const { x, y } = centerpoint;
+    const closeOnX = x < 25 || x > 775;
+    const closeOnY = y < 25 || y > 575;
+
+    return closeOnX || closeOnY;
+  };
+
+  const targetDirections = {
+    1: (currentHeading) =>
+      currentHeading > Math.PI / 2 && currentHeading < Math.PI,
+    2: (currentHeading) =>
+      currentHeading > Math.PI && currentHeading < (Math.PI * 3) / 2,
+    3: (currentHeading) => currentHeading > 0 && currentHeading < Math.PI / 2,
+    4: (currentHeading) =>
+      currentHeading > (Math.PI * 3) / 2 && currentHeading < Math.PI * 2,
+  };
+
+  const getQuadrant = (centerpoint) => {
+    const topLeft = 1;
+    const topRight = 2;
+    const bottomLeft = 3;
+    const bottomRight = 4;
+
+    const x = centerpoint.x;
+    const y = centerpoint.y;
+
+    const xMid = window.width / 2;
+    const yMid = window.height / 2;
+
+    if (x < xMid && y < yMid) return topLeft;
+    else if (x > xMid && y < yMid) return topRight;
+    else if (x < xMid && y > yMid) return bottomLeft;
+    return bottomRight;
+  };
+
+  const centerpoint = beatUpdate.centerpoint;
+  const heading = beatUpdate.facing;
+  const quadrant = getQuadrant(centerpoint);
+  const isHappyHeading = targetDirections[quadrant];
+  const weAreHappyWhereWeAreHeading = isHappyHeading(heading);
+
+  let port = randomFinSpeed();
+  let starboard = randomFinSpeed();
+  //   if (weAreHappyWhereWeAreHeading) {
+  //     port =
+  //   }
+
   socket.emit(
     "setFinSpeed",
     arenaId,
     playerId,
-    { port: randomFinSpeed(), starboard: randomFinSpeed() },
+    { port, starboard },
     (result) => {
-      //commandUpdate(result);
+      // What we do with the CommandUpdate.
+      // commandId: string; status: in-progress | succeeded | failed; message: string | null
       logResult("setFinSpeed", result);
     }
   );
+};
+
+socket.on("beatUpdate", (stuff) => {
+  tryMove(socket)(stuff);
 
   socket.emit("fireLaser", arenaId, playerId);
 
   socket.emit("fireTorpedo", arenaId, playerId, randomTorpedoDirection());
 
-  socket.emit("performWideScan", arenaId, playerId);
+  //   socket.emit("performWideScan", arenaId, playerId, (something) =>
+  //     console.log("wide", something)
+  //   );
+  //   socket.emit("performNarrowScan", arenaId, playerId, 0, (something) =>
+  //     console.log("narrow", something)
+  //   );
 });
 
 socket.on("commandUpdate", (stuff) => console.log("commandUpdate", stuff));
