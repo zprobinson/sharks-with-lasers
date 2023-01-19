@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "Team iiilql;r",
   "main": "test-socket-io.js",
+  "type": "module",
   "scripts": {
     "start": "node test-socket-io.js",
     "test": "echo \"Error: no test specified\" && exit 1"
