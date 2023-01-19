@@ -1,34 +1,22 @@
 const { io } = require("socket.io-client");
 const axios = require("axios");
 
-console.log("test");
-
 const baseSocket = "http://192.168.130.142:3000/";
 
 const logResult = console.log;
 
 const socket = io(baseSocket);
 
-const arenaId = "0000-ATP2";
-const playerId = "0fb3d073-6f47-4d60-b404-2daa111d6f1e";
+const arenaId = "0003-W7TD";
+const playerId = "26fdf677-a242-40b9-b95d-40b219ed3276";
 
 const randomInterval = (max, min) => () =>
   Math.floor(Math.random() * (max - min + 1) + min);
-const randomFinSpeed = randomInterval(-5, 6);
+const randomFinSpeed = randomInterval(-1, 6);
 const randomTorpedoDirection = randomInterval(0, 2 * Math.PI);
 
 socket.on("connect", () => {
-  console.log("we have liftoff");
-
   socket.emit("takeControl", arenaId, playerId, console.log);
-});
-
-socket.on("connect_error", () => {
-  console.log("we do not have liftoff");
-});
-
-socket.on("disconnect", () => {
-  console.log("we have disconnected");
 });
 
 // Assumption of screen size at 800 width by 600 height
@@ -45,45 +33,37 @@ const tryMove = (socket) => (beatUpdate) => {
     return closeOnX || closeOnY;
   };
 
-  const targetDirections = {
-    1: (currentHeading) =>
-      currentHeading > Math.PI / 2 && currentHeading < Math.PI,
-    2: (currentHeading) =>
-      currentHeading > Math.PI && currentHeading < (Math.PI * 3) / 2,
-    3: (currentHeading) => currentHeading > 0 && currentHeading < Math.PI / 2,
-    4: (currentHeading) =>
-      currentHeading > (Math.PI * 3) / 2 && currentHeading < Math.PI * 2,
-  };
-
-  const getQuadrant = (centerpoint) => {
-    const topLeft = 1;
-    const topRight = 2;
-    const bottomLeft = 3;
-    const bottomRight = 4;
-
-    const x = centerpoint.x;
-    const y = centerpoint.y;
-
-    const xMid = window.width / 2;
-    const yMid = window.height / 2;
-
-    if (x < xMid && y < yMid) return topLeft;
-    else if (x > xMid && y < yMid) return topRight;
-    else if (x < xMid && y > yMid) return bottomLeft;
-    return bottomRight;
-  };
-
-  const centerpoint = beatUpdate.centerpoint;
+  const centerpoint = beatUpdate.centerPoint;
   const heading = beatUpdate.facing;
-  const quadrant = getQuadrant(centerpoint);
-  const isHappyHeading = targetDirections[quadrant];
-  const weAreHappyWhereWeAreHeading = isHappyHeading(heading);
+
+  const getAngle = (shark, target) => {
+    let a = -1 * Math.atan2(target.y - shark.y, target.x - shark.x); // Calc angle between two points
+    a = a + Math.PI / 2; // convert to game coordinates
+    return a % (Math.PI * 2);
+  };
 
   let port = randomFinSpeed();
   let starboard = randomFinSpeed();
-  //   if (weAreHappyWhereWeAreHeading) {
-  //     port =
-  //   }
+
+  const isWithin = (target, actual, lower, upper) => {
+    const lowerBound = target - lower;
+    const upperBound = target + upper;
+    return actual > lowerBound && actual < upperBound;
+  };
+
+  if (isCloseToEdge(centerpoint)) {
+    const myAngle = getAngle(centerpoint, {
+      x: window.width / 2,
+      y: window.height / 2,
+    });
+    if (isWithin(myAngle, heading, 0.5, 0.5)) {
+      port = 6;
+      starboard = 6;
+    } else {
+      port = -5;
+      starboard = 6;
+    }
+  }
 
   socket.emit(
     "setFinSpeed",
@@ -98,8 +78,10 @@ const tryMove = (socket) => (beatUpdate) => {
   );
 };
 
-socket.on("beatUpdate", (stuff) => {
-  tryMove(socket)(stuff);
+socket.on("beatUpdate", (beat) => {
+  if (beat.isAlive === "yes") {
+    tryMove(socket)(beat);
+  }
 
   socket.emit("fireLaser", arenaId, playerId);
 
