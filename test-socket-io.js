@@ -4,7 +4,7 @@ import { tryMove, getAngle } from "./boundaryLogic.js";
 import { arenaId, playerId, window } from "./myConfig.js";
 import axios from "axios";
 
-const baseSocket = "http://192.168.130.142:3000/";
+const baseSocket = "http://192.168.130.142:3001/";
 
 const socket = io(baseSocket);
 
@@ -18,35 +18,35 @@ socket.on("connect", () => {
 });
 
 socket.on("beatUpdate", (beat) => {
+  const centerpoint = { x: beat.positionX, y: beat.positionY };
+  console.log("beatupdate", beat);
   if (beat.isAlive === "yes") {
-    const centerOfScreen = getAngle(beat.centerPoint, { x: 400, y: 300 });
-    if (beat.torpedoCount > 0)
+    const centerOfScreen = getAngle(centerpoint, { x: 400, y: 300 });
+    if (beat.torpedoCount > 0 && beat.energy > 30)
       socket.emit("performNarrowScan", arenaId, playerId, centerOfScreen);
+
+    if (beat.energy > 30 && beat.gameTime % 10 === 0)
+      socket.emit("fireLaser", arenaId, playerId);
 
     beat.events.forEach((element) => {
       if (element.event == "narrowScanExecutedEvent") {
         element.sharks.forEach((shark) => {
           if (beat.torpedoCount > 0) {
-            const targetAngle = getAngle(beat.centerPoint, shark.center);
+            const targetAngle = getAngle({ x: 400, y: 300 }, centerpoint);
             socket.emit("fireTorpedo", arenaId, playerId, targetAngle);
           }
         });
       }
+
+      if (beat.health < 400 && beat.mode !== "repair") {
+        socket.emit("setFinSpeed", arenaId, playerId, 0, 0);
+        socket.emit("setSharkMode", arenaId, playerId, "repair");
+      } else if (beat.health > 500 && beat.mode !== "attack") {
+        socket.emit("setSharkMode", arenaId, playerId, "attack");
+      } else {
+        tryMove(socket)(beat);
+      }
     });
-  }
-
-  // socket.emit("fireLaser", arenaId, playerId);
-
-  // socket.emit("fireTorpedo", arenaId, playerId, randomTorpedoDirection());
-
-  // console.log(beat);
-  if (beat.health < 400 && beat.mode !== "repair") {
-    socket.emit("setFinSpeed", arenaId, playerId, { port: 0, starboard: 0 });
-    socket.emit("setSharkMode", arenaId, playerId, "repair");
-  } else if (beat.health > 500 && beat.mode !== "attack") {
-    socket.emit("setSharkMode", arenaId, playerId, "attack");
-  } else {
-    tryMove(socket)(beat);
   }
 
   //   socket.emit("performWideScan", arenaId, playerId, (something) =>

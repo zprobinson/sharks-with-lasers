@@ -1,5 +1,5 @@
-export const arenaId = "0006-N6V0";
-export const playerId = "15490d49-d98e-465e-be83-876b08098f42";
+export const arenaId = "0004-UC56";
+export const playerId = "4348d3d6-1f63-4010-96fb-94ef72d0dd81";
 
 // Assumption of screen size at 800 width by 600 height
 export const window = {

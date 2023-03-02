@@ -1,19 +1,28 @@
-@baseUrl = http://192.168.130.142:3000/
+@baseUrl = http://192.168.130.142:3001/
+@arenaId = 0004-UC56
 
 ###
 GET {{baseUrl}}public-arenas
 
 ###
-GET {{baseUrl}}arena-settings/0000-0048
+GET {{baseUrl}}arena/{{arenaId}}/settings
 
 ###
-POST {{baseUrl}}create-arena
+POST {{baseUrl}}arena/create
 Content-Type: application/json
 
 {
-    "arenaType": "public",
-    "countdownToStart": 10,
-    "gameLength": 720
+    "arenaType": "development",
+    "countdownToStart": 30,
+    "gameLength": 15000
+}
+
+###
+POST {{baseUrl}}arena/{{arenaId}}/create-players
+Content-Type: application/json
+
+{
+    "sharkNames": ["foo"]
 }
 
 ###
@@ -35,12 +44,12 @@ content-type: application/json
     "arenaType": "private",
     "countdownToStart": 1,
     "gameLength": 15000,
-    "players": [ { "sharkName": "" } ] }
+    "players": [ { "sharkName": "zach" } ] }
 
 ###
-POST {{baseUrl}}create-public-player/0000-0048
+POST {{baseUrl}}create-public-player/0002-16X6
 Content-Type: application/json
 
 {
-    "sharkName": "hi world"
+    "sharkName": "iiilq;r"
 }
