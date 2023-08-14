@@ -19,8 +19,20 @@ socket.on("connect", () => {
 
 socket.on("beatUpdate", (beat) => {
   const centerpoint = { x: beat.positionX, y: beat.positionY };
-  console.log("beatupdate", beat);
+  //console.log("beatupdate", beat);
   if (beat.isAlive === "yes") {
+    if (beat.health < 400 && beat.mode !== "repair") {
+      socket.emit("setFinSpeed", arenaId, playerId, 0, 0, (result) =>
+        console.log("set fin speed for repair", result)
+      );
+      socket.emit("setSharkMode", arenaId, playerId, "repair");
+      return;
+    } else if (beat.health > 500 && beat.mode !== "attack") {
+      socket.emit("setSharkMode", arenaId, playerId, "attack");
+    } else {
+      tryMove(socket)(beat);
+    }
+
     const centerOfScreen = getAngle(centerpoint, { x: 400, y: 300 });
     if (beat.torpedoCount > 0 && beat.energy > 30)
       socket.emit("performNarrowScan", arenaId, playerId, centerOfScreen);
@@ -36,15 +48,6 @@ socket.on("beatUpdate", (beat) => {
             socket.emit("fireTorpedo", arenaId, playerId, targetAngle);
           }
         });
-      }
-
-      if (beat.health < 400 && beat.mode !== "repair") {
-        socket.emit("setFinSpeed", arenaId, playerId, 0, 0);
-        socket.emit("setSharkMode", arenaId, playerId, "repair");
-      } else if (beat.health > 500 && beat.mode !== "attack") {
-        socket.emit("setSharkMode", arenaId, playerId, "attack");
-      } else {
-        tryMove(socket)(beat);
       }
     });
   }
